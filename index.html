@@ -194,9 +194,9 @@ function Msg({ role, content, thinking, sq }) {
       maxWidth:isUser?'78%':'92%'
     }}>
       <div style={{
-        width:26,height:26,borderRadius:'50%',flexShrink:0,
+        width:32,height:32,borderRadius:'50%',flexShrink:0,
         display:'flex',alignItems:'center',justifyContent:'center',
-        fontSize:11,fontWeight:600,
+        fontSize:12,fontWeight:600,
         background:isUser?'#21262d':'linear-gradient(135deg,#c89b3c,#785a28)',
         color:isUser?'#8b949e':'#fff',
         border:isUser?'1px solid #30363d':'none'
@@ -204,7 +204,7 @@ function Msg({ role, content, thinking, sq }) {
         {isUser?'Du':'⚖'}
       </div>
       <div style={{
-        padding:'8px 12px',borderRadius:11,fontSize:13,lineHeight:1.65,
+        padding:'11px 14px',borderRadius:12,fontSize:14,lineHeight:1.7,
         background:isUser?'#1f6feb':'#161b22',
         border:isUser?'none':'1px solid #30363d',
         color:isUser?'#fff':'#e6edf3',
@@ -647,34 +647,35 @@ function App() {
       {/* Header */}
       <div style={{
         background:'#161b22',borderBottom:'1px solid #30363d',
-        padding:'9px 14px',display:'flex',alignItems:'center',
-        gap:10,flexShrink:0
+        padding:'12px 16px',display:'flex',alignItems:'center',
+        gap:12,flexShrink:0,minHeight:56
       }}>
         <button onClick={()=>setSidebar(true)} style={{
           background:'none',border:'none',color:'#8b949e',
-          fontSize:19,cursor:'pointer',padding:'1px 4px',lineHeight:1
+          fontSize:22,cursor:'pointer',padding:'6px 8px',lineHeight:1,
+          margin:'-6px -4px'
         }}>&#9776;</button>
         <div style={{
-          width:28,height:28,flexShrink:0,
+          width:34,height:34,flexShrink:0,
           background:'linear-gradient(135deg,#c89b3c,#785a28)',
-          borderRadius:7,display:'flex',alignItems:'center',
-          justifyContent:'center',fontSize:14
+          borderRadius:9,display:'flex',alignItems:'center',
+          justifyContent:'center',fontSize:17
         }}>&#9878;</div>
         <div style={{flex:1,minWidth:0}}>
-          <div style={{fontSize:13,fontWeight:600,
+          <div style={{fontSize:15,fontWeight:600,
             whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
             {activeTitle}
           </div>
-          <div style={{fontSize:10,color:'#8b949e'}}>
-            Sonnet 4.6 &#183; Errata &#183; Live-Kartensuche
+          <div style={{fontSize:11,color:'#8b949e'}}>
+            Sonnet 3.7 &#183; Errata &#183; Live-Kartensuche
           </div>
         </div>
       </div>
 
       {/* Chat */}
       <div ref={chatRef} style={{
-        flex:1,overflowY:'auto',padding:'14px',
-        display:'flex',flexDirection:'column',gap:11
+        flex:1,overflowY:'auto',padding:'16px 14px',
+        display:'flex',flexDirection:'column',gap:14
       }}>
         {!activeChatId && (
           <div style={{
@@ -691,9 +692,9 @@ function App() {
               Tippe &#9776; oben links um einen Chat zu erstellen.
             </div>
             <button onClick={()=>setSidebar(true)} style={{
-              background:'#c89b3c',border:'none',borderRadius:8,
-              color:'#0d1117',fontWeight:600,fontSize:13,
-              padding:'9px 20px',cursor:'pointer'
+              background:'#c89b3c',border:'none',borderRadius:10,
+              color:'#0d1117',fontWeight:700,fontSize:15,
+              padding:'13px 28px',cursor:'pointer'
             }}>
               + Neuen Chat starten
             </button>
@@ -707,10 +708,10 @@ function App() {
 
       {/* Input */}
       <div style={{
-          borderTop:'1px solid #30363d',background:'#161b22',
-          padding:'9px 12px',paddingBottom:'calc(9px + env(safe-area-inset-bottom))',
-          display:'flex',gap:7,
-          alignItems:'flex-end',flexShrink:0
+          borderTop:'2px solid #30363d',background:'#161b22',
+          padding:'12px 14px',paddingBottom:'calc(12px + env(safe-area-inset-bottom))',
+          display:'flex',gap:10,
+          alignItems:'flex-end',flexShrink:0,minHeight:64
         }}>
           <textarea ref={taRef} value={input}
             onChange={e => {
@@ -727,22 +728,22 @@ function App() {
             placeholder={activeChatId ? 'Regelfrage...' : 'Chat auswählen oder erstellen ↗'}
             rows={1} disabled={loading}
             style={{
-              flex:1,background:'#0d1117',
-              border:'1px solid ' + (input?'#c89b3c':'#30363d'),
-              borderRadius:7,color:'#e6edf3',
-              padding:'7px 10px',fontSize:16,
+              flex:1,background:'#21262d',
+              border:'2px solid ' + (input?'#c89b3c':'#444c56'),
+              borderRadius:10,color:'#e6edf3',
+              padding:'10px 13px',fontSize:16,
               fontFamily:'inherit',resize:'none',WebkitAppearance:'none',
-              minHeight:36,maxHeight:110,outline:'none',
+              minHeight:44,maxHeight:130,outline:'none',
               transition:'border-color .2s',
-              opacity: activeChatId ? 1 : 0.6
+              opacity: activeChatId ? 1 : 0.5
             }}/>
           <button onClick={()=>send()} disabled={loading||!input.trim()||!activeChatId} style={{
             background:loading||!input.trim()||!activeChatId?'#3d2f12':'#c89b3c',
-            border:'none',borderRadius:7,
+            border:'none',borderRadius:10,
             color:loading||!input.trim()||!activeChatId?'#5d4a25':'#0d1117',
-            fontWeight:600,fontSize:13,padding:'7px 14px',
+            fontWeight:700,fontSize:15,padding:'0 18px',
             cursor:loading||!input.trim()||!activeChatId?'default':'pointer',
-            height:36,whiteSpace:'nowrap',
+            height:44,whiteSpace:'nowrap',
             transition:'all .2s',flexShrink:0
           }}>
             {loading?'…':'Senden ↗'}
