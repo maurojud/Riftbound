@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#161b22">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -10,13 +10,28 @@
 <title>Riftbound Schiedsrichter</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body,#root{height:100%;overflow:hidden}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:#0d1117;color:#e6edf3;-webkit-font-smoothing:antialiased}
+html{height:100%;height:-webkit-fill-available}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  background:#0d1117;color:#e6edf3;-webkit-font-smoothing:antialiased;
+  height:100%;height:-webkit-fill-available;
+  overflow:hidden;
+  /* Prevent iOS bounce */
+  position:fixed;width:100%;
+}
+#root{
+  height:100%;height:100dvh;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#30363d;border-radius:3px}
 @keyframes bar{0%,100%{transform:scaleY(0.2);opacity:0.3}50%{transform:scaleY(1);opacity:1}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 .mi{animation:fi 0.15s ease-out}
+/* iOS safe areas for notch/home indicator */
+.safe-top{padding-top:env(safe-area-inset-top)}
+.safe-bottom{padding-bottom:env(safe-area-inset-bottom)}
 </style>
 </head>
 <body>
@@ -547,8 +562,8 @@ function App() {
           'anthropic-dangerous-direct-browser-access': 'true'
         },
         body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 2000,
+          model: 'claude-sonnet-3-7-20250219',
+          max_tokens: 1024,
           system: SYSTEM,
           tools: tools,
           messages: m
@@ -619,7 +634,7 @@ function App() {
   return (
     <div style={{
       display:'flex',flexDirection:'column',
-      height:'100vh',background:'#0d1117',color:'#e6edf3'
+      height:'100dvh',background:'#0d1117',color:'#e6edf3',display:'flex',flexDirection:'column',overflow:'hidden'
     }}>
       <Sidebar
         chats={chats} activeChatId={activeChatId}
@@ -691,10 +706,10 @@ function App() {
       </div>
 
       {/* Input */}
-      {activeChatId && (
-        <div style={{
+      <div style={{
           borderTop:'1px solid #30363d',background:'#161b22',
-          padding:'9px 12px',display:'flex',gap:7,
+          padding:'9px 12px',paddingBottom:'calc(9px + env(safe-area-inset-bottom))',
+          display:'flex',gap:7,
           alignItems:'flex-end',flexShrink:0
         }}>
           <textarea ref={taRef} value={input}
@@ -708,33 +723,44 @@ function App() {
                 e.preventDefault(); send();
               }
             }}
-            placeholder="Regelfrage..." rows={1} disabled={loading}
+            onFocus={() => { if (!activeChatId) setSidebar(true); }}
+            placeholder={activeChatId ? 'Regelfrage...' : 'Chat auswählen oder erstellen ↗'}
+            rows={1} disabled={loading}
             style={{
               flex:1,background:'#0d1117',
               border:'1px solid ' + (input?'#c89b3c':'#30363d'),
               borderRadius:7,color:'#e6edf3',
-              padding:'7px 10px',fontSize:13,
-              fontFamily:'inherit',resize:'none',
+              padding:'7px 10px',fontSize:16,
+              fontFamily:'inherit',resize:'none',WebkitAppearance:'none',
               minHeight:36,maxHeight:110,outline:'none',
-              transition:'border-color .2s'
+              transition:'border-color .2s',
+              opacity: activeChatId ? 1 : 0.6
             }}/>
-          <button onClick={()=>send()} disabled={loading||!input.trim()} style={{
-            background:loading||!input.trim()?'#3d2f12':'#c89b3c',
+          <button onClick={()=>send()} disabled={loading||!input.trim()||!activeChatId} style={{
+            background:loading||!input.trim()||!activeChatId?'#3d2f12':'#c89b3c',
             border:'none',borderRadius:7,
-            color:loading||!input.trim()?'#5d4a25':'#0d1117',
+            color:loading||!input.trim()||!activeChatId?'#5d4a25':'#0d1117',
             fontWeight:600,fontSize:13,padding:'7px 14px',
-            cursor:loading||!input.trim()?'default':'pointer',
+            cursor:loading||!input.trim()||!activeChatId?'default':'pointer',
             height:36,whiteSpace:'nowrap',
             transition:'all .2s',flexShrink:0
           }}>
             {loading?'…':'Senden ↗'}
           </button>
         </div>
-      )}
     </div>
   );
 }
 
+// Mobile keyboard fix: resize root when keyboard opens/closes
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    const root = document.getElementById('root');
+    if (root) {
+      root.style.height = window.visualViewport.height + 'px';
+    }
+  });
+}
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body>
