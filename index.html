@@ -47,17 +47,31 @@ const SYSTEM = `You are an official Riftbound TCG rules judge. You know all Rift
 
 STYLE: Answer directly. No intro, no filler, no "great question". Cite rule numbers when helpful. Answer in the language of the question.
 
-KEY RULES:
-- Golden Rule: card text beats rules text. Can't beats Can. DAMAYC.
-- HOT FEPR: Handle Outstanding Tasks then Finalize-Execute-Pass-Resolve.
-- May-triggered abilities: OPTIONAL to place on chain (Unleashed update).
-- Costs in triggered ability instructions: paid on finalization.
-- Replacement effects: controller of effect chooses order. Can be refused.
+CORE RULES (apply all of these):
+- Golden Rule: card text beats rules text. Can't beats Can. DAMAYC (do as much as possible).
+- FEPR: Finalize, Execute, Pass, Resolve. HOT FEPR: Handle Outstanding Tasks first, then FEPR.
+- Playing a card: Announce → choose targets/move destinations → pay costs → enter chain → legality check (step 5) → execute.
+- Conditional permissive abilities (e.g. Ambush): checked at step 5. If not met, undo and return card.
+- "May" triggered abilities (Unleashed): OPTIONAL — controller chooses whether to place on chain.
+- Costs in triggered ability instructions ("do X to do Y"): paid on finalization, not resolution.
+- Replacement effects: controller of replacement effect chooses ORDER when multiple apply. Can be REFUSED.
+- Linked instructions (Unleashed): later instruction cannot execute if earlier one did not. Exception: if earlier was REPLACED (not ignored).
 - Battlefield control cannot change while: contested, combat/showdown ongoing, or item on chain.
-- Tank: assigned first. Backline: assigned last in combat damage.
-- Attachment: while attached, Rules Text INACTIVE, Effect Text + Might Bonus ACTIVE.
-- Victory: points >= Victory Score AND greater than all opponents. 1v1=8, 2v2=11, FFA=8.
-- For card texts not in errata: use web_search on piltoverarchive.com.
+- Contested = player has units there and doesn't control it.
+- Combat steps: 1) Opening (designations) 2) Initial Chain (attacker first, defender last) 3) Active Chain 4) Damage (Tank first, Backline last) 5) Resolution HOT FEPR (cleanup, determine winner, conquer, remove designations).
+- Attack/Defend triggers: fire ONCE per combat, first time unit gains that designation.
+- Attachment (Spiritforged): while attached, Rules Text INACTIVE, Effect Text + Might Bonus ACTIVE. Inactive text still exists and CAN be referenced.
+- Hidden: costs [A] to hide, costs [0] to play from face down, gains Reaction while face down.
+- Ambush: Reaction to play to battlefield where you control units. Rengar errata: can Ambush where enemy units are even without your own.
+- Legion: active only while player has played another card this turn.
+- Level: active while controller has N or more XP.
+- XP: gained via Hunt (when unit with Hunt conquers or holds). Spent like energy.
+- Recall: sends to object's OWN base. Not a move. Doesn't change exhausted/ready state.
+- Null ≠ Zero: unavailable numerical info is null, not 0.
+- Copy: copies all printed/copied traits. Nothing appended/granted is copied. Copy of copy = copy of original.
+- Victory: points >= Victory Score AND greater than all opponents (both conditions). 1v1=8, 2v2=11, FFA=8.
+- Tianna Crownguard errata: opponents can't GAIN points (not "score").
+- For specific card texts not in errata: use web_search on piltoverarchive.com or riftbound.leagueoflegends.com.
 
 CURRENT ERRATA (always use these, never printed text):
 ${ERRATA}`;
@@ -73,10 +87,17 @@ async function loadChats(userId) {
 }
 
 async function createChat(userId, title) {
-  const { data, error } = await sb.from('rb_chats')
-    .insert({ user_id: userId, title })
-    .select().single();
+  const { error } = await sb.from('rb_chats')
+    .insert({ user_id: userId, title });
   if (error) throw error;
+  // Fetch the chat we just created
+  const { data, error: e2 } = await sb.from('rb_chats')
+    .select('id,title,created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+  if (e2) throw e2;
   return data;
 }
 
@@ -451,8 +472,8 @@ function App() {
           'anthropic-dangerous-direct-browser-access': 'true'
         },
         body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 600,
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1024,
           system: SYSTEM,
           tools,
           messages: m
@@ -510,15 +531,7 @@ function App() {
     taRef.current?.focus();
   };
 
-  const qbs = [
-    ['HOT FEPR','Erkläre HOT FEPR kurz.'],
-    ['Hidden','Wie funktioniert Hidden?'],
-    ['Combat','Combat vs Showdown?'],
-    ['Equip/Attach','Equip, Attach, Weaponmaster?'],
-    ['XP/Hunt/Level','XP, Hunt und Level?'],
-    ['Rengar','Was macht Rengar, Trophy Hunter?'],
-    ['Gewinnen','Wie gewinnt man?'],
-  ];
+  const qbs = [];
 
   if (!authChecked) return (
     <div style={{display:'flex',alignItems:'center',justifyContent:'center',
@@ -584,18 +597,7 @@ function App() {
         {loading && <Msg role="judge" content="" thinking={true} sq={sq}/>}
       </div>
 
-      {/* Quick buttons */}
-      {activeChatId && (
-        <div style={{padding:'0 12px 7px',display:'flex',gap:5,flexWrap:'wrap',flexShrink:0}}>
-          {qbs.map(([l,q]) => (
-            <button key={l} className="qb" onClick={()=>send(q)} disabled={loading} style={{
-              background:'#21262d',border:'1px solid #30363d',borderRadius:20,
-              color:'#8b949e',fontSize:11,padding:'3px 9px',
-              cursor:loading?'default':'pointer',transition:'all .15s'}}>
-              {l}
-            </button>
-          ))}
-        </div>
+      {/* Quick buttons removed */}
       )}
 
       {/* Input */}
