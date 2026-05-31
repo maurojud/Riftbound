@@ -201,6 +201,7 @@ function AuthScreen({ onAuth }) {
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
   const [apiKey, setApiKey] = useState('');
+  const [showKey, setShowKey] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
@@ -211,18 +212,35 @@ function AuthScreen({ onAuth }) {
       if (mode === 'login') {
         const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
         if (error) throw error;
-        // load api key from profile
-        const profile = await loadProfile(data.user.id);
-        onAuth(data.user, profile?.api_key || '');
+        let profile = await loadProfile(data.user.id);
+        let key = profile?.api_key || '';
+        // Check if there's a pending key from registration before email confirmation
+        const pendingKey = localStorage.getItem('rb_pending_key_' + email);
+        if (!key && pendingKey) {
+          await saveProfile(data.user.id, pendingKey);
+          localStorage.removeItem('rb_pending_key_' + email);
+          key = pendingKey;
+        }
+        // If user manually entered a key on login screen, save it
+        if (!key && apiKey.startsWith('sk-')) {
+          await saveProfile(data.user.id, apiKey);
+          key = apiKey;
+        }
+        onAuth(data.user, key);
       } else {
         if (!apiKey.startsWith('sk-')) throw new Error('API-Key muss mit sk- beginnen');
+        if (pass.length < 6) throw new Error('Passwort muss mindestens 6 Zeichen haben');
         const { data, error } = await sb.auth.signUp({ email, password: pass });
         if (error) throw error;
-        if (data.user) {
+        if (data.user && data.session) {
+          // Email confirmation disabled or auto-confirmed
           await saveProfile(data.user.id, apiKey);
           onAuth(data.user, apiKey);
-        } else {
-          setInfo('Bestätigungs-Email gesendet. Bitte E-Mail bestätigen und dann einloggen.');
+        } else if (data.user && !data.session) {
+          // Need email confirmation - save pending api key in localStorage
+          localStorage.setItem('rb_pending_key_' + email, apiKey);
+          setInfo('Bestätigungs-Email gesendet. Bitte bestätigen, dann hier einloggen.');
+          setMode('login');
         }
       }
     } catch(e) {
@@ -267,6 +285,10 @@ function AuthScreen({ onAuth }) {
         {inp(email,setEmail,'E-Mail','email')}
         {inp(pass,setPass,'Passwort (min. 6 Zeichen)','password')}
         {mode==='register' && inp(apiKey,setApiKey,'Anthropic API-Key (sk-ant-...)')}
+        {mode==='login' && <div style={{fontSize:11,color:'#484f58',marginBottom:10}}>
+          Kein API-Key gespeichert? <button onClick={()=>setShowKey(s=>!s)} style={{background:'none',border:'none',color:'#8b949e',cursor:'pointer',fontSize:11,textDecoration:'underline'}}>Key eingeben</button>
+        </div>}
+        {mode==='login' && showKey && inp(apiKey,setApiKey,'API-Key (optional, falls nicht gespeichert)')}
 
         {error && <div style={{fontSize:12,color:'#f85149',marginBottom:10,padding:'6px 8px',background:'#1c0f0f',borderRadius:5}}>{error}</div>}
         {info && <div style={{fontSize:12,color:'#3fb950',marginBottom:10,padding:'6px 8px',background:'#0d1a0d',borderRadius:5}}>{info}</div>}
@@ -296,11 +318,20 @@ function Sidebar({ chats, activeChatId, onSelect, onCreate, onDelete, onRename, 
   const [newTitle, setNewTitle] = useState('');
   const [editId, setEditId] = useState(null);
   const [editVal, setEditVal] = useState('');
+  const [createErr, setCreateErr] = useState('');
+  const [creating, setCreating] = useState(false);
 
   const handleCreate = async () => {
     const t = newTitle.trim() || 'Neuer Chat';
-    setNewTitle('');
-    await onCreate(t);
+    setCreateErr('');
+    setCreating(true);
+    try {
+      await onCreate(t);
+      setNewTitle('');
+    } catch(e) {
+      setCreateErr(e.message);
+    }
+    setCreating(false);
   };
 
   if (!open) return null;
@@ -316,18 +347,21 @@ function Sidebar({ chats, activeChatId, onSelect, onCreate, onDelete, onRename, 
         </div>
 
         {/* New chat */}
-        <div style={{padding:'10px 12px',borderBottom:'1px solid #21262d',display:'flex',gap:6}}>
-          <input value={newTitle} onChange={e=>setNewTitle(e.target.value)}
-            onKeyDown={e=>e.key==='Enter'&&handleCreate()}
-            placeholder="Neuer Chat..." style={{
-              flex:1,background:'#161b22',border:'1px solid #30363d',
-              borderRadius:6,color:'#e6edf3',padding:'5px 8px',fontSize:12
-            }}/>
-          <button onClick={handleCreate} style={{
-            background:'#c89b3c',border:'none',borderRadius:6,
-            color:'#0d1117',fontSize:12,fontWeight:600,
-            padding:'5px 10px',cursor:'pointer',whiteSpace:'nowrap'
-          }}>+ Neu</button>
+        <div style={{padding:'10px 12px',borderBottom:'1px solid #21262d'}}>
+          <div style={{display:'flex',gap:6}}>
+            <input value={newTitle} onChange={e=>setNewTitle(e.target.value)}
+              onKeyDown={e=>e.key==='Enter'&&!creating&&handleCreate()}
+              placeholder="Chat-Titel..." style={{
+                flex:1,background:'#161b22',border:'1px solid #30363d',
+                borderRadius:6,color:'#e6edf3',padding:'5px 8px',fontSize:12,outline:'none'
+              }}/>
+            <button onClick={handleCreate} disabled={creating} style={{
+              background:creating?'#3d2f12':'#c89b3c',border:'none',borderRadius:6,
+              color:creating?'#5d4a25':'#0d1117',fontSize:12,fontWeight:600,
+              padding:'5px 10px',cursor:creating?'default':'pointer',whiteSpace:'nowrap'
+            }}>{creating?'…':'+ Neu'}</button>
+          </div>
+          {createErr && <div style={{fontSize:11,color:'#f85149',marginTop:5,lineHeight:1.4}}>{createErr}</div>}
         </div>
 
         {/* Chat list */}
