@@ -18,8 +18,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 @keyframes fadein{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 .msg-in{animation:fadein 0.15s ease-out}
 textarea:disabled{opacity:0.5}
-.sidebar-item:hover{background:#1f2937 !important}
-.sidebar-item.active{background:#1a1500 !important;border-left:2px solid #c89b3c !important}
+input[type=text],input[type=email],input[type=password]{outline:none;transition:border-color .2s}
+input:focus{border-color:#c89b3c !important}
+.si:hover{background:#1f2937 !important}
+.si.active{background:#1a1500 !important;border-left:2px solid #c89b3c !important}
+.qb:hover:not(:disabled){border-color:#c89b3c !important;color:#c89b3c !important}
 </style>
 </head>
 <body>
@@ -27,88 +30,87 @@ textarea:disabled{opacity:0.5}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script type="text/babel">
-const { useState, useRef, useEffect, useCallback } = React;
+const { useState, useRef, useEffect } = React;
 
-const SB_URL = "https://ablijbnlplkvxxuqsvyx.supabase.co";
-const SB_KEY = "sb_publishable_-xS_wT0nSSKtrmLuj84ejw__0ZRrwSn";
-const SB_HEADERS = {
-  'apikey': SB_KEY,
-  'Authorization': 'Bearer ' + SB_KEY,
-  'Content-Type': 'application/json',
-  'Prefer': 'return=representation'
-};
+// ── SUPABASE ──────────────────────────────────────────────────────────────────
+const sb = supabase.createClient(
+  "https://ablijbnlplkvxxuqsvyx.supabase.co",
+  "sb_publishable_-xS_wT0nSSKtrmLuj84ejw__0ZRrwSn"
+);
 
-const ERRATA = "=== ORIGINS CARD ERRATA (2025-10-28) ===\n\nAva Achiever: When I attack, you may pay [C] to play a card with [Hidden] from your hand, ignoring its cost. If it's a unit, play it here.\nBaited Hook: Kill a friendly unit. Look at top 5. You may BANISH a unit from among them that has Might up to 1 more than killed unit and play it, ignoring its cost.\nBlind Fury: Each opponent reveals top card. Choose one and BANISH IT, then play it, ignoring its cost.\nClockwork Keeper: You may pay [C] as additional cost to play me. When you play me, if you paid the additional cost, draw 1.\nConvergent Mutation: [Reaction] Choose a friendly unit. THIS TURN, increase its Might to the Might of another friendly unit.\nDark Child, Starter: At the end of your turn, ready UP TO 2 runes.\nDazzling Aurora: reveal cards until you reveal a unit and BANISH IT. Play it, ignoring its cost.\nDisintegrate: Deal 3 to a unit at a battlefield. If this kills it, DO THIS: draw 1.\nDragon's Rage: Move an enemy unit. THEN DO THIS: Choose another enemy unit at its destination.\nDune Drake: When I attack, give me +2[M] THIS TURN if there is a ready enemy unit here.\nFalling Star: Deal 3 to a unit. / Deal 3 to a unit. (TWO SEPARATE INSTRUCTIONS - you can choose different units each time)\nHighlander: [Reaction] Choose a friendly unit. The next time it WOULD DIE this turn, HEAL IT, exhaust it, and recall it instead.\nIcathian Rain: Deal 2 to a unit. x6 - SIX SEPARATE INSTRUCTIONS (you can choose different units each time)\nKarma, Channeler: When you recycle one or more cards TO YOUR MAIN DECK, buff a friendly unit.\nKinkou Monk: When you play me, buff UP TO two other friendly units.\nNocturne, Horrifying: [Ganking] As you LOOK AT OR REVEAL me from the top of your deck, you may banish me. If you do, you may play me for [A].\nPack of Wonders: [E]: Return another friendly gear, unit, or FACEDOWN CARD to its owner's hand.\nPortal Rescue: [Action] Banish a friendly unit, then ITS OWNER plays it to THEIR base, ignoring its cost.\nPromising Future: Each player looks at top 5, BANISHES one of them, then recycles the rest.\nRavenborn Tome: [E]: The next spell you play THIS TURN deals 1 Bonus Damage.\nReinforce: Look at top 5. You may BANISH a unit from among them, then play it, reducing its cost by [5].\nSalvage: [Action] You may kill UP TO one gear. Draw 1.\nSigil of the Storm: When you conquer here, you must recycle one of your runes. (THIS DOESN'T CHOOSE ANYTHING.)\nSona, Harmonious: At the end of your turn, IF I'M AT A BATTLEFIELD, ready up to 4 friendly runes.\nTargon's Peak: When you conquer here, ready UP TO 2 runes at the end of this turn.\nTeemo, Strategist: [Hidden] When I DEFEND, choose an enemy unit HERE and reveal top 5. Deal 1 to THAT UNIT for each card with [Hidden] revealed this way, then recycle.\nThe Boss: If a buffed unit you control WOULD DIE, you may pay [C], exhaust me, and spend its buff to HEAL IT, exhaust it, and recall it instead. When you conquer, ready me.\nThe Dreaming Tree: When A PLAYER chooses a friendly unit here with a spell for the first time each turn, THEY draw 1.\nThe Syren: [1],[E]: Move a friendly unit at a battlefield TO ITS base.\nTideturner: [Hidden] When you play me, you may choose a unit YOU CONTROL at another location.\nUnforgiven: [2],[E]: Move a friendly unit to or from ITS base.\nUnlicensed Armory: Discard 1,[E]: The next time it WOULD DIE this turn, you may pay [C] to HEAL IT, exhaust it, and recall it instead.\nVoid Gate: Spells and abilities deal 1 Bonus Damage TO UNITS HERE. (Each instance of damage the spell deals to a unit here is increased by 1.)\nZhonya's Hourglass: [Hidden] If a friendly unit WOULD DIE, kill this instead. HEAL that unit, exhaust it, and recall it.\n\n=== SPIRITFORGED CARD ERRATA (2026-01-14) ===\n\nArise!: Play a 2[M] Sand Soldier unit token for each Equipment you control. THEN DO THIS: Ready UP TO two of them.\nBlood Rush: [Action][Repeat][1] Give a unit [Assault 2] THIS TURN.\nDeathgrip: [Reaction] Kill a friendly unit. IF YOU DO, give +[M] equal to its Might to another friendly unit this turn. Draw 1.\nEdge of Night: [Hidden] When you play this from face down, attach it to a unit you control (here). [Equip][C]\nJanna, Savior: [Reaction] When you play me, heal your units here, then move UP TO ONE enemy unit from here to its base.\nJax, Unmatched: [Deflect] Your Equipment EVERYWHERE have [Quick-Draw].\nKato the Arm: [Deflect] When I move to a battlefield, give ANOTHER friendly unit my keywords and +[M] equal to my Might this turn.\nRek'Sai, Swarm Queen: When I attack, you may reveal top 2. You may BANISH ONE, then play it. If it is a unit, you may play it here. Recycle the rest.\nRell, Magnetic: [Tank] When I attack, you may play an Equipment costing up to [2], ignoring its cost. IF YOU DO, THEN DO THIS: Attach it to me.\nTianna Crownguard: [Deflect] While I'm at a battlefield, opponents CAN'T GAIN POINTS.\nVoid Burrower: When you conquer, you may exhaust me to reveal top 2. You may BANISH ONE, then play it. Recycle the rest.\nVoid Rush: Reveal top 2. You may BANISH ONE, then play it, reducing its cost by [2]. DRAW any you didn't banish.\nYone, Blademaster: [Weaponmaster] When I conquer a battlefield THAT WAS UNCONTROLLED, deal damage equal to my Might to an enemy unit in a base.\n\n=== UNLEASHED ERRATA (2026-04-03) ===\n\nGuards! (Spiritforged): [Hidden] Play a 2[M] Sand Soldier unit token. THEN DO THIS: You may pay [C] to ready it.\nRelentless Pursuit (Spiritforged): [Action] Move a friendly unit. You may attach UP TO ONE Equipment with the same controller to it.\nDeath from Below (Unleashed): Kill a unit at a battlefield. Then, if it had 3[M] or less, DO THIS: You may play this from your trash for [A].\nBone Skewer (Unleashed): [Hidden] An opponent reveals their hand. You may choose a unit. They play it to a battlefield. IF THEY DO, THEN DO THIS: [Stun] it.\nLeBlanc, Deceiver (Unleashed): When you conquer or hold, you may discard 1 and exhaust me to play a Reflection token there. THEN DO THIS: It becomes a copy of another unit there. Give it [Temporary].\nMirror Image (Unleashed): Choose a unit. Play a Reflection token to your base. THEN DO THIS: It becomes a copy of that unit. Give it [Temporary].\nKeeper of Masks (Unleashed): [Hidden][Temporary] When you play me, play two Reflection tokens here. THEN DO THIS: They become copies of me.\nRengar, Trophy Hunter (Unleashed): [Ambush] I can [Ambush] to a battlefield where there are enemy units, EVEN IF YOU DON'T HAVE UNITS THERE.";
+// ── ERRATA & SYSTEM PROMPT ────────────────────────────────────────────────────
+const ERRATA = '=== ORIGINS CARD ERRATA (2025-10-28) ===\n\nAva Achiever: When I attack, you may pay [C] to play a card with [Hidden] from your hand, ignoring its cost. If it\\u2019s a unit, play it here.\nBaited Hook: Kill a friendly unit. Look at top 5. You may BANISH a unit from among them that has Might up to 1 more than killed unit and play it, ignoring its cost.\nBlind Fury: Each opponent reveals top card. Choose one and BANISH IT, then play it, ignoring its cost.\nClockwork Keeper: You may pay [C] as additional cost to play me. When you play me, if you paid the additional cost, draw 1.\nConvergent Mutation: [Reaction] Choose a friendly unit. THIS TURN, increase its Might to the Might of another friendly unit.\nDark Child, Starter: At the end of your turn, ready UP TO 2 runes.\nDazzling Aurora: Reveal cards until you reveal a unit and BANISH IT. Play it, ignoring its cost, recycle rest.\nDisintegrate: Deal 3 to a unit at a battlefield. If this kills it, DO THIS: draw 1.\nDragon\\u2019s Rage: Move an enemy unit. THEN DO THIS: Choose another enemy unit at its destination.\nDune Drake: When I attack, give me +2[M] THIS TURN if there is a ready enemy unit here.\nFalling Star: Deal 3 to a unit. / Deal 3 to a unit. (TWO SEPARATE INSTRUCTIONS)\nHighlander: [Reaction] The next time a friendly unit WOULD DIE this turn, HEAL IT, exhaust it, and recall it instead.\nIcathian Rain: Deal 2 to a unit. (x6 \\u2014 SIX SEPARATE INSTRUCTIONS, can choose different targets)\nKarma, Channeler: When you recycle one or more cards TO YOUR MAIN DECK, buff a friendly unit.\nKinkou Monk: When you play me, buff UP TO two other friendly units.\nNocturne, Horrifying: [Ganking] As you LOOK AT OR REVEAL me from the top of your deck, you may banish me. If you do, play me for [A].\nPack of Wonders: Return another friendly gear, unit, or FACEDOWN CARD to its owner\\u2019s hand.\nPortal Rescue: Banish a friendly unit, then ITS OWNER plays it to THEIR base, ignoring its cost.\nPromising Future: Each player looks at top 5, BANISHES one of them, then recycles the rest.\nRavenborn Tome: The next spell you play THIS TURN deals 1 Bonus Damage.\nReinforce: Look at top 5. BANISH a unit, then play it reducing its cost by [5].\nSalvage: You may kill UP TO one gear. Draw 1.\nSigil of the Storm: When you conquer here, recycle one of your runes. (THIS DOESN\\u2019T CHOOSE ANYTHING.)\nSona, Harmonious: At end of your turn, IF I\\u2019M AT A BATTLEFIELD, ready up to 4 friendly runes.\nTarg\\u00f6n\\u2019s Peak: When you conquer here, ready UP TO 2 runes at end of this turn.\nTeemo, Strategist: [Hidden] When I DEFEND, choose an enemy unit HERE, reveal top 5, deal 1 to THAT UNIT for each [Hidden] revealed, recycle.\nThe Boss: If a buffed unit WOULD DIE, you may pay [C], exhaust me, spend its buff to HEAL IT, exhaust it, recall it. When you conquer, ready me.\nThe Dreaming Tree: When A PLAYER chooses a friendly unit here with a spell for the first time each turn, THEY draw 1.\nThe Syren: Move a friendly unit at a battlefield TO ITS base.\nTideturner: [Hidden] When you play me, choose a unit YOU CONTROL at another location. Swap positions.\nUnforgiven: Move a friendly unit to or from ITS base.\nUnlicensed Armory: The next time it WOULD DIE this turn, you may pay [C] to HEAL IT, exhaust it, recall it.\nVoid Gate: Spells and abilities deal 1 Bonus Damage TO UNITS HERE (each instance increased by 1).\nZhonya\\u2019s Hourglass: [Hidden] If a friendly unit WOULD DIE, kill this instead. HEAL that unit, exhaust it, recall it.\n\n=== SPIRITFORGED CARD ERRATA (2026-01-14) ===\n\nArise!: Play Sand Soldier tokens for each Equipment. THEN DO THIS: Ready UP TO two of them.\nBlood Rush: Give a unit [Assault 2] THIS TURN.\nDeathgrip: Kill a friendly unit. IF YOU DO, give +[M] equal to its Might to another friendly unit this turn. Draw 1.\nEdge of Night: When played from face down, attach to a unit you control (here).\nJanna, Savior: Heal your units here, then move UP TO ONE enemy unit from here to its base.\nJax, Unmatched: Your Equipment EVERYWHERE have [Quick-Draw].\nKato the Arm: When I move to a battlefield, give ANOTHER friendly unit my keywords and +[M] this turn.\nRek\\u2019Sai, Swarm Queen: When I attack, reveal top 2. BANISH ONE, play it. If unit, may play here. Recycle rest.\nRell, Magnetic: Play Equipment (cost up to [2]), ignoring cost. IF YOU DO, THEN DO THIS: Attach it to me.\nTianna Crownguard: While I\\u2019m at a battlefield, opponents CAN\\u2019T GAIN POINTS.\nVoid Burrower: When you conquer, exhaust me to reveal top 2. BANISH ONE, play it. Recycle rest.\nVoid Rush: Reveal top 2. BANISH ONE, play it reducing cost by [2]. DRAW any you didn\\u2019t banish.\nYone, Blademaster: When I conquer a battlefield THAT WAS UNCONTROLLED, deal damage to an enemy unit in a base.\n\n=== UNLEASHED ERRATA (2026-04-03) ===\n\nGuards!: Play a Sand Soldier token. THEN DO THIS: You may pay [C] to ready it.\nRelentless Pursuit: Move a friendly unit. You may attach UP TO ONE Equipment with the same controller to it.\nDeath from Below: Kill a unit. Then, if it had 3[M] or less, DO THIS: You may play this from your trash for [A].\nBone Skewer: Opponent reveals hand, you choose a unit, they play it. IF THEY DO, THEN DO THIS: [Stun] it.\nLeBlanc, Deceiver: Play a Reflection token there. THEN DO THIS: It becomes a copy of another unit there. Give it [Temporary].\nMirror Image: Play a Reflection token to base. THEN DO THIS: It becomes a copy of that unit. Give it [Temporary].\nKeeper of Masks: [Hidden][Temporary] Play two Reflection tokens here. THEN DO THIS: They become copies of me.\nRengar, Trophy Hunter: [Ambush] I can [Ambush] to a battlefield where there are enemy units, EVEN IF YOU DON\\u2019T HAVE UNITS THERE.';
 
-// Compact system prompt - no full rules, Claude already knows them
-// Only errata (changes from printed text) and behavior instructions
-const SYSTEM = `You are an official Riftbound TCG rules judge. Answer based on official Riftbound rules and the errata below.
+const SYSTEM = `You are an official Riftbound TCG rules judge. You know all Riftbound Core Rules.
 
-RULES: Apply standard Riftbound Core Rules (you know them). Key points:
+STYLE: Answer directly. No intro, no filler, no "great question". Cite rule numbers when helpful. Answer in the language of the question.
+
+KEY RULES:
 - Golden Rule: card text beats rules text. Can't beats Can. DAMAYC.
 - HOT FEPR: Handle Outstanding Tasks then Finalize-Execute-Pass-Resolve.
 - May-triggered abilities: OPTIONAL to place on chain (Unleashed update).
 - Costs in triggered ability instructions: paid on finalization.
 - Replacement effects: controller of effect chooses order. Can be refused.
-- Battlefield control cannot change while contested, combat/showdown ongoing, or item on chain.
-- Tank assigned first, Backline assigned last in combat damage.
+- Battlefield control cannot change while: contested, combat/showdown ongoing, or item on chain.
+- Tank: assigned first. Backline: assigned last in combat damage.
 - Attachment: while attached, Rules Text INACTIVE, Effect Text + Might Bonus ACTIVE.
 - Victory: points >= Victory Score AND greater than all opponents. 1v1=8, 2v2=11, FFA=8.
 - For card texts not in errata: use web_search on piltoverarchive.com.
 
-STYLE: Direct answers only. No intro, no outro, no "great question". Cite rule sections when helpful. Answer in the language of the question.
-
 CURRENT ERRATA (always use these, never printed text):
-` + ERRATA;
+${ERRATA}`;
 
-// ── SUPABASE HELPERS ──────────────────────────────────────────────────────────
-async function sbFetch(path, opts = {}) {
-  const r = await fetch(SB_URL + '/rest/v1/' + path, {
-    headers: SB_HEADERS,
-    ...opts
-  });
-  if (!r.ok) {
-    const err = await r.text();
-    throw new Error('Supabase error: ' + err);
-  }
-  const text = await r.text();
-  return text ? JSON.parse(text) : null;
+// ── DB HELPERS ────────────────────────────────────────────────────────────────
+async function loadChats(userId) {
+  const { data, error } = await sb.from('rb_chats')
+    .select('id,title,created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
 }
 
-async function loadChats() {
-  return await sbFetch('rb_chats?select=id,title,created_at&order=created_at.desc');
-}
-
-async function createChat(title) {
-  const res = await sbFetch('rb_chats', {
-    method: 'POST',
-    body: JSON.stringify({ title })
-  });
-  return Array.isArray(res) ? res[0] : res;
+async function createChat(userId, title) {
+  const { data, error } = await sb.from('rb_chats')
+    .insert({ user_id: userId, title })
+    .select().single();
+  if (error) throw error;
+  return data;
 }
 
 async function deleteChat(id) {
-  await sbFetch('rb_messages?chat_id=eq.' + id, { method: 'DELETE' });
-  await sbFetch('rb_chats?id=eq.' + id, { method: 'DELETE' });
+  await sb.from('rb_messages').delete().eq('chat_id', id);
+  await sb.from('rb_chats').delete().eq('id', id);
+}
+
+async function renameChat(id, title) {
+  await sb.from('rb_chats').update({ title }).eq('id', id);
 }
 
 async function loadMessages(chatId) {
-  return await sbFetch('rb_messages?chat_id=eq.' + chatId + '&order=created_at.asc&select=role,content');
+  const { data, error } = await sb.from('rb_messages')
+    .select('role,content')
+    .eq('chat_id', chatId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data;
 }
 
 async function saveMessage(chatId, role, content) {
-  await sbFetch('rb_messages', {
-    method: 'POST',
-    body: JSON.stringify({ chat_id: chatId, role, content })
-  });
+  await sb.from('rb_messages').insert({ chat_id: chatId, role, content });
 }
 
-async function updateChatTitle(id, title) {
-  await sbFetch('rb_chats?id=eq.' + id, {
-    method: 'PATCH',
-    body: JSON.stringify({ title })
-  });
+async function loadProfile(userId) {
+  const { data } = await sb.from('rb_profiles')
+    .select('api_key').eq('id', userId).single();
+  return data;
+}
+
+async function saveProfile(userId, apiKey) {
+  await sb.from('rb_profiles')
+    .upsert({ id: userId, api_key: apiKey });
 }
 
 // ── THINKING ANIMATION ────────────────────────────────────────────────────────
@@ -119,13 +121,13 @@ function Thinking({ query }) {
     return () => clearInterval(t);
   }, []);
   const labels = ['Denke nach…', 'Prüfe Regeln…', 'Prüfe Errata…'];
-  const label = query ? 'Suche: „' + query + '"' : labels[tick % 3];
+  const label = query ? 'Suche: „' + query + '“' : labels[tick % 3];
   const n = query ? 8 : 4;
   const color = query ? '#79c0ff' : '#c89b3c';
   return (
     <div style={{display:'flex',flexDirection:'column',gap:7}}>
       <div style={{display:'flex',alignItems:'center',gap:3,height:20}}>
-        {Array.from({length:n}).map((_,i)=>(
+        {Array.from({length:n}).map((_,i) => (
           <div key={i} style={{width:3,borderRadius:3,background:color,height:20,
             animation:'bar 0.85s ease-in-out infinite',animationDelay:i*0.09+'s',
             transformOrigin:'center'}}/>
@@ -148,37 +150,136 @@ function Msg({ role, content, thinking, sq }) {
     .replace(/`([^`]+)`/g, '<code style="background:#21262d;padding:1px 4px;border-radius:3px;font-family:monospace;font-size:11px;color:#c89b3c">$1</code>')
     .replace(/\n\n/g,'<br/><br/>').replace(/\n/g,'<br/>');
   return (
-    <div className="msg-in" style={{display:'flex',gap:8,flexDirection:isUser?'row-reverse':'row',
-      alignSelf:isUser?'flex-end':'flex-start',maxWidth:isUser?'76%':'91%'}}>
-      <div style={{width:26,height:26,borderRadius:'50%',flexShrink:0,display:'flex',
-        alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:600,
+    <div className="msg-in" style={{display:'flex',gap:8,
+      flexDirection:isUser?'row-reverse':'row',
+      alignSelf:isUser?'flex-end':'flex-start',
+      maxWidth:isUser?'76%':'91%'}}>
+      <div style={{width:26,height:26,borderRadius:'50%',flexShrink:0,
+        display:'flex',alignItems:'center',justifyContent:'center',
+        fontSize:11,fontWeight:600,
         background:isUser?'#21262d':'linear-gradient(135deg,#c89b3c,#785a28)',
-        color:isUser?'#8b949e':'#fff',border:isUser?'1px solid #30363d':'none'}}>
+        color:isUser?'#8b949e':'#fff',
+        border:isUser?'1px solid #30363d':'none'}}>
         {isUser?'Du':'⚖'}
       </div>
       <div style={{padding:'8px 12px',borderRadius:11,fontSize:13,lineHeight:1.6,
         background:isUser?'#1f6feb':'#161b22',
         border:isUser?'none':'1px solid #30363d',
         color:isUser?'#fff':'#e6edf3',
-        borderTopLeftRadius:isUser?11:3,borderTopRightRadius:isUser?3:11}}>
+        borderTopLeftRadius:isUser?11:3,
+        borderTopRightRadius:isUser?3:11}}>
         {thinking ? <Thinking query={sq}/> : <span dangerouslySetInnerHTML={{__html:fmt(content)}}/>}
       </div>
     </div>
   );
 }
 
+// ── AUTH SCREEN ───────────────────────────────────────────────────────────────
+function AuthScreen({ onAuth }) {
+  const [mode, setMode] = useState('login'); // login | register
+  const [email, setEmail] = useState('');
+  const [pass, setPass] = useState('');
+  const [apiKey, setApiKey] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
+
+  const handle = async () => {
+    setError(''); setInfo(''); setLoading(true);
+    try {
+      if (mode === 'login') {
+        const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+        if (error) throw error;
+        // load api key from profile
+        const profile = await loadProfile(data.user.id);
+        onAuth(data.user, profile?.api_key || '');
+      } else {
+        if (!apiKey.startsWith('sk-')) throw new Error('API-Key muss mit sk- beginnen');
+        const { data, error } = await sb.auth.signUp({ email, password: pass });
+        if (error) throw error;
+        if (data.user) {
+          await saveProfile(data.user.id, apiKey);
+          onAuth(data.user, apiKey);
+        } else {
+          setInfo('Bestätigungs-Email gesendet. Bitte E-Mail bestätigen und dann einloggen.');
+        }
+      }
+    } catch(e) {
+      setError(e.message);
+    }
+    setLoading(false);
+  };
+
+  const inp = (val, set, ph, type='text') => (
+    <input type={type} value={val} onChange={e=>set(e.target.value)}
+      onKeyDown={e=>e.key==='Enter'&&handle()}
+      placeholder={ph} style={{
+        width:'100%',background:'#0d1117',border:'1px solid #30363d',
+        borderRadius:7,color:'#e6edf3',padding:'9px 11px',
+        fontSize:13,marginBottom:10,display:'block'
+      }}/>
+  );
+
+  return (
+    <div style={{position:'fixed',inset:0,background:'#0d1117',display:'flex',
+      alignItems:'center',justifyContent:'center',padding:20,zIndex:100}}>
+      <div style={{background:'#161b22',border:'1px solid #30363d',borderRadius:14,
+        padding:26,maxWidth:360,width:'100%'}}>
+        <div style={{fontSize:32,textAlign:'center',marginBottom:10}}>⚖</div>
+        <h2 style={{fontSize:15,fontWeight:600,textAlign:'center',marginBottom:18}}>
+          Riftbound Schiedsrichter
+        </h2>
+
+        {/* Tab switch */}
+        <div style={{display:'flex',background:'#0d1117',borderRadius:8,padding:3,marginBottom:18}}>
+          {['login','register'].map(m => (
+            <button key={m} onClick={()=>{setMode(m);setError('');setInfo('');}} style={{
+              flex:1,background:mode===m?'#21262d':'transparent',
+              border:'none',borderRadius:6,color:mode===m?'#e6edf3':'#8b949e',
+              fontSize:12,fontWeight:mode===m?600:400,padding:'6px',cursor:'pointer'
+            }}>
+              {m==='login'?'Einloggen':'Registrieren'}
+            </button>
+          ))}
+        </div>
+
+        {inp(email,setEmail,'E-Mail','email')}
+        {inp(pass,setPass,'Passwort (min. 6 Zeichen)','password')}
+        {mode==='register' && inp(apiKey,setApiKey,'Anthropic API-Key (sk-ant-...)')}
+
+        {error && <div style={{fontSize:12,color:'#f85149',marginBottom:10,padding:'6px 8px',background:'#1c0f0f',borderRadius:5}}>{error}</div>}
+        {info && <div style={{fontSize:12,color:'#3fb950',marginBottom:10,padding:'6px 8px',background:'#0d1a0d',borderRadius:5}}>{info}</div>}
+
+        <button onClick={handle} disabled={loading} style={{
+          width:'100%',background:loading?'#3d2f12':'#c89b3c',
+          border:'none',borderRadius:7,
+          color:loading?'#5d4a25':'#0d1117',
+          fontWeight:600,fontSize:13,padding:'10px',
+          cursor:loading?'default':'pointer'
+        }}>
+          {loading?'...':(mode==='login'?'Einloggen':'Account erstellen')}
+        </button>
+
+        {mode==='register' && (
+          <p style={{fontSize:11,color:'#484f58',textAlign:'center',marginTop:10}}>
+            API-Key: console.anthropic.com → API Keys
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── SIDEBAR ───────────────────────────────────────────────────────────────────
-function Sidebar({ chats, activeChatId, onSelect, onCreate, onDelete, onRename, open, onClose }) {
+function Sidebar({ chats, activeChatId, onSelect, onCreate, onDelete, onRename, onLogout, open, onClose, userEmail }) {
   const [newTitle, setNewTitle] = useState('');
-  const [creating, setCreating] = useState(false);
   const [editId, setEditId] = useState(null);
   const [editVal, setEditVal] = useState('');
 
   const handleCreate = async () => {
     const t = newTitle.trim() || 'Neuer Chat';
-    setNewTitle(''); setCreating(true);
+    setNewTitle('');
     await onCreate(t);
-    setCreating(false);
   };
 
   if (!open) return null;
@@ -186,97 +287,88 @@ function Sidebar({ chats, activeChatId, onSelect, onCreate, onDelete, onRename, 
     <div style={{position:'fixed',inset:0,zIndex:50,display:'flex'}}>
       <div style={{width:260,background:'#0d1117',borderRight:'1px solid #30363d',
         display:'flex',flexDirection:'column',height:'100%',flexShrink:0}}>
-        {/* Header */}
-        <div style={{padding:'12px 14px',borderBottom:'1px solid #30363d',display:'flex',alignItems:'center',gap:8}}>
-          <span style={{fontSize:14,fontWeight:600,flex:1}}>Chats</span>
-          <button onClick={onClose} style={{background:'none',border:'none',color:'#8b949e',fontSize:18,cursor:'pointer',lineHeight:1}}>×</button>
+
+        {/* User info */}
+        <div style={{padding:'12px 14px',borderBottom:'1px solid #30363d'}}>
+          <div style={{fontSize:11,color:'#8b949e',marginBottom:2}}>Eingeloggt als</div>
+          <div style={{fontSize:12,color:'#e6edf3',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{userEmail}</div>
         </div>
-        {/* New chat input */}
+
+        {/* New chat */}
         <div style={{padding:'10px 12px',borderBottom:'1px solid #21262d',display:'flex',gap:6}}>
           <input value={newTitle} onChange={e=>setNewTitle(e.target.value)}
             onKeyDown={e=>e.key==='Enter'&&handleCreate()}
-            placeholder="Neuer Chat..." style={{flex:1,background:'#161b22',border:'1px solid #30363d',
-            borderRadius:6,color:'#e6edf3',padding:'5px 8px',fontSize:12,outline:'none'}}/>
-          <button onClick={handleCreate} disabled={creating} style={{
-            background:'#c89b3c',border:'none',borderRadius:6,color:'#0d1117',
-            fontSize:12,fontWeight:600,padding:'5px 10px',cursor:'pointer',whiteSpace:'nowrap'}}>
-            + Neu
-          </button>
+            placeholder="Neuer Chat..." style={{
+              flex:1,background:'#161b22',border:'1px solid #30363d',
+              borderRadius:6,color:'#e6edf3',padding:'5px 8px',fontSize:12
+            }}/>
+          <button onClick={handleCreate} style={{
+            background:'#c89b3c',border:'none',borderRadius:6,
+            color:'#0d1117',fontSize:12,fontWeight:600,
+            padding:'5px 10px',cursor:'pointer',whiteSpace:'nowrap'
+          }}>+ Neu</button>
         </div>
+
         {/* Chat list */}
         <div style={{flex:1,overflowY:'auto',padding:'6px 8px',display:'flex',flexDirection:'column',gap:2}}>
-          {chats.length === 0 && <div style={{fontSize:12,color:'#484f58',padding:'8px 6px'}}>Noch keine Chats</div>}
+          {chats.length===0 && <div style={{fontSize:12,color:'#484f58',padding:'8px 6px'}}>Noch keine Chats</div>}
           {chats.map(c => (
-            <div key={c.id} className={'sidebar-item' + (c.id===activeChatId?' active':'')}
+            <div key={c.id} className={'si'+(c.id===activeChatId?' active':'')}
               onClick={()=>{onSelect(c.id);onClose();}}
               style={{padding:'7px 10px',borderRadius:6,cursor:'pointer',
-                display:'flex',alignItems:'center',gap:6,borderLeft:'2px solid transparent',
+                display:'flex',alignItems:'center',gap:6,
+                borderLeft:'2px solid transparent',
                 background:c.id===activeChatId?'#1a1500':'transparent'}}>
               {editId===c.id ? (
-                <input autoFocus value={editVal} onChange={e=>setEditVal(e.target.value)}
+                <input autoFocus value={editVal}
+                  onChange={e=>setEditVal(e.target.value)}
                   onKeyDown={e=>{
                     if(e.key==='Enter'){onRename(c.id,editVal);setEditId(null);}
                     if(e.key==='Escape'){setEditId(null);}
                   }}
                   onClick={e=>e.stopPropagation()}
-                  style={{flex:1,background:'#21262d',border:'1px solid #c89b3c',borderRadius:4,
-                    color:'#e6edf3',padding:'2px 5px',fontSize:12,outline:'none'}}/>
+                  style={{flex:1,background:'#21262d',border:'1px solid #c89b3c',
+                    borderRadius:4,color:'#e6edf3',padding:'2px 5px',
+                    fontSize:12,outline:'none'}}/>
               ) : (
-                <span style={{flex:1,fontSize:12,color:'#e6edf3',whiteSpace:'nowrap',
-                  overflow:'hidden',textOverflow:'ellipsis'}}>{c.title}</span>
+                <span style={{flex:1,fontSize:12,color:'#e6edf3',
+                  whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                  {c.title}
+                </span>
               )}
-              <div style={{display:'flex',gap:3,flexShrink:0}} onClick={e=>e.stopPropagation()}>
+              <div style={{display:'flex',gap:2,flexShrink:0}} onClick={e=>e.stopPropagation()}>
                 <button onClick={()=>{setEditId(c.id);setEditVal(c.title);}}
-                  style={{background:'none',border:'none',color:'#484f58',fontSize:11,cursor:'pointer',padding:'1px 3px'}} title="Umbenennen">✎</button>
+                  title="Umbenennen"
+                  style={{background:'none',border:'none',color:'#484f58',
+                    fontSize:11,cursor:'pointer',padding:'1px 3px'}}>✎</button>
                 <button onClick={()=>onDelete(c.id)}
-                  style={{background:'none',border:'none',color:'#484f58',fontSize:11,cursor:'pointer',padding:'1px 3px'}} title="Löschen">🗑</button>
+                  title="Löschen"
+                  style={{background:'none',border:'none',color:'#484f58',
+                    fontSize:11,cursor:'pointer',padding:'1px 3px'}}>🗑</button>
               </div>
             </div>
           ))}
         </div>
-      </div>
-      {/* Backdrop */}
-      <div onClick={onClose} style={{flex:1,background:'rgba(0,0,0,0.5)'}}/>
-    </div>
-  );
-}
 
-// ── API KEY MODAL ─────────────────────────────────────────────────────────────
-function ApiKeyModal({ onSave }) {
-  const [val, setVal] = useState('');
-  const valid = val.startsWith('sk-');
-  return (
-    <div style={{position:'fixed',inset:0,background:'#0d1117',display:'flex',
-      alignItems:'center',justifyContent:'center',padding:20,zIndex:100}}>
-      <div style={{background:'#161b22',border:'1px solid #30363d',borderRadius:14,
-        padding:26,maxWidth:380,width:'100%'}}>
-        <div style={{fontSize:32,textAlign:'center',marginBottom:10}}>⚖</div>
-        <h2 style={{fontSize:15,fontWeight:600,textAlign:'center',marginBottom:6}}>Riftbound Schiedsrichter</h2>
-        <p style={{fontSize:12,color:'#8b949e',textAlign:'center',marginBottom:18,lineHeight:1.5}}>
-          Anthropic API-Key eingeben.<br/>Wird lokal gespeichert.
-        </p>
-        <input type="password" value={val} onChange={e=>setVal(e.target.value)}
-          onKeyDown={e=>e.key==='Enter'&&valid&&onSave(val)}
-          placeholder="sk-ant-..."
-          style={{width:'100%',background:'#0d1117',border:'1px solid #30363d',borderRadius:7,
-            color:'#e6edf3',padding:'9px 11px',fontSize:13,fontFamily:'monospace',outline:'none',marginBottom:10}}/>
-        <button onClick={()=>valid&&onSave(val)} style={{
-          width:'100%',background:valid?'#c89b3c':'#21262d',border:'none',borderRadius:7,
-          color:valid?'#0d1117':'#484f58',fontWeight:600,fontSize:13,padding:'10px',
-          cursor:valid?'pointer':'default',transition:'all .2s'}}>
-          Speichern & Starten
-        </button>
-        <p style={{fontSize:11,color:'#484f58',textAlign:'center',marginTop:10}}>
-          console.anthropic.com → API Keys
-        </p>
+        {/* Logout */}
+        <div style={{padding:'10px 12px',borderTop:'1px solid #21262d'}}>
+          <button onClick={onLogout} style={{
+            width:'100%',background:'none',border:'1px solid #30363d',
+            borderRadius:6,color:'#8b949e',fontSize:12,
+            padding:'7px',cursor:'pointer'
+          }}>Ausloggen</button>
+        </div>
       </div>
+      <div onClick={onClose} style={{flex:1,background:'rgba(0,0,0,0.5)'}}/>
     </div>
   );
 }
 
 // ── MAIN APP ──────────────────────────────────────────────────────────────────
 function App() {
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('rb_key') || '');
+  const [user, setUser] = useState(null);
+  const [apiKey, setApiKey] = useState('');
+  const [authChecked, setAuthChecked] = useState(false);
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -284,18 +376,26 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [sq, setSq] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [dbError, setDbError] = useState(null);
   const chatRef = useRef(null);
   const taRef = useRef(null);
   const histRef = useRef([]);
 
   useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [messages, loading]);
 
-  // Load chats on mount
+  // Check existing session on load
   useEffect(() => {
-    if (!apiKey) return;
-    loadChats().then(setChats).catch(e => setDbError(e.message));
-  }, [apiKey]);
+    sb.auth.getSession().then(async ({ data }) => {
+      if (data.session?.user) {
+        const u = data.session.user;
+        const profile = await loadProfile(u.id);
+        setUser(u);
+        setApiKey(profile?.api_key || '');
+        const c = await loadChats(u.id);
+        setChats(c);
+      }
+      setAuthChecked(true);
+    });
+  }, []);
 
   // Load messages when chat changes
   useEffect(() => {
@@ -303,26 +403,39 @@ function App() {
     loadMessages(activeChatId).then(msgs => {
       setMessages(msgs);
       histRef.current = msgs.map(m => ({ role: m.role, content: m.content }));
-    }).catch(e => setDbError(e.message));
+    });
   }, [activeChatId]);
 
+  const handleAuth = async (u, key) => {
+    setUser(u); setApiKey(key);
+    const c = await loadChats(u.id);
+    setChats(c);
+  };
+
+  const handleLogout = async () => {
+    await sb.auth.signOut();
+    setUser(null); setApiKey(''); setChats([]);
+    setActiveChatId(null); setMessages([]); histRef.current = [];
+    setSidebarOpen(false);
+  };
+
   const handleCreateChat = async (title) => {
-    const chat = await createChat(title);
-    const updated = await loadChats();
-    setChats(updated);
+    const chat = await createChat(user.id, title);
+    const c = await loadChats(user.id);
+    setChats(c);
     setActiveChatId(chat.id);
   };
 
   const handleDeleteChat = async (id) => {
     await deleteChat(id);
-    const updated = await loadChats();
-    setChats(updated);
+    const c = await loadChats(user.id);
+    setChats(c);
     if (activeChatId === id) { setActiveChatId(null); setMessages([]); histRef.current = []; }
   };
 
   const handleRenameChat = async (id, title) => {
-    await updateChatTitle(id, title.trim() || 'Chat');
-    setChats(prev => prev.map(c => c.id === id ? {...c, title} : c));
+    await renameChat(id, title.trim() || 'Chat');
+    setChats(prev => prev.map(c => c.id===id ? {...c, title} : c));
   };
 
   const runLoop = async (msgs) => {
@@ -339,7 +452,7 @@ function App() {
         },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 3000,
+          max_tokens: 600,
           system: SYSTEM,
           tools,
           messages: m
@@ -352,12 +465,12 @@ function App() {
         const tu = content.find(b => b.type === 'tool_use');
         if (tu?.name === 'web_search') setSq(tu.input?.query || '…');
         m.push({ role: 'assistant', content });
-        const results = content.filter(b => b.type === 'tool_use')
+        const results = content.filter(b => b.type==='tool_use')
           .map(b => ({ type: 'tool_result', tool_use_id: b.id, content: '' }));
         m.push({ role: 'user', content: results });
         continue;
       }
-      return content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+      return content.filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
     }
     throw new Error('Zu viele Iterationen');
   };
@@ -365,113 +478,120 @@ function App() {
   const send = async (override) => {
     const text = (override || input).trim();
     if (!text || loading) return;
-    if (!activeChatId) { alert('Bitte zuerst einen Chat auswählen oder erstellen (☰ oben links)'); return; }
+    if (!activeChatId) {
+      setSidebarOpen(true);
+      return;
+    }
     setInput(''); setLoading(true); setSq(null);
     if (taRef.current) taRef.current.style.height = 'auto';
 
     const userMsg = { role: 'user', content: text };
     setMessages(prev => [...prev, userMsg]);
     histRef.current = [...histRef.current, userMsg];
-    await saveMessage(activeChatId, 'user', text).catch(() => {});
+    saveMessage(activeChatId, 'user', text).catch(()=>{});
 
-    // Auto-rename chat from first message
-    const isFirst = histRef.current.length === 1;
-    if (isFirst) {
-      const title = text.length > 40 ? text.slice(0, 40) + '…' : text;
+    // Auto-title from first message
+    if (histRef.current.length === 1) {
+      const title = text.length > 42 ? text.slice(0,42)+'…' : text;
       handleRenameChat(activeChatId, title);
     }
 
     try {
       const reply = await runLoop(histRef.current.slice(-12));
-      const assistantMsg = { role: 'assistant', content: reply };
-      histRef.current = [...histRef.current, assistantMsg];
-      setMessages(prev => [...prev, assistantMsg]);
-      await saveMessage(activeChatId, 'assistant', reply).catch(() => {});
+      const aMsg = { role: 'assistant', content: reply };
+      histRef.current = [...histRef.current, aMsg];
+      setMessages(prev => [...prev, aMsg]);
+      saveMessage(activeChatId, 'assistant', reply).catch(()=>{});
     } catch(e) {
-      const errMsg = { role: 'assistant', content: 'Fehler: ' + e.message };
-      setMessages(prev => [...prev, errMsg]);
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Fehler: '+e.message }]);
       histRef.current.pop();
     }
     setLoading(false); setSq(null);
     taRef.current?.focus();
   };
 
-  const quickBtns = [
-    ['HOT FEPR', 'Erkläre HOT FEPR kurz.'],
-    ['Hidden', 'Wie funktioniert Hidden?'],
-    ['Combat', 'Combat vs Non-Combat Showdown?'],
-    ['Equip/Attach', 'Equip, Attach, Weaponmaster?'],
-    ['XP/Hunt/Level', 'XP, Hunt und Level?'],
-    ['Replacement', 'Replacement Effects?'],
-    ['Gewinnen', 'Wie gewinnt man?'],
+  const qbs = [
+    ['HOT FEPR','Erkläre HOT FEPR kurz.'],
+    ['Hidden','Wie funktioniert Hidden?'],
+    ['Combat','Combat vs Showdown?'],
+    ['Equip/Attach','Equip, Attach, Weaponmaster?'],
+    ['XP/Hunt/Level','XP, Hunt und Level?'],
+    ['Rengar','Was macht Rengar, Trophy Hunter?'],
+    ['Gewinnen','Wie gewinnt man?'],
   ];
 
-  const saveKey = k => { localStorage.setItem('rb_key', k); setApiKey(k); };
+  if (!authChecked) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',
+      height:'100vh',background:'#0d1117',color:'#8b949e',fontSize:13}}>
+      Laden…
+    </div>
+  );
 
-  if (!apiKey) return <ApiKeyModal onSave={saveKey}/>;
+  if (!user) return <AuthScreen onAuth={handleAuth}/>;
+
+  const activeTitle = chats.find(c=>c.id===activeChatId)?.title || 'Riftbound Schiedsrichter';
 
   return (
     <div style={{display:'flex',flexDirection:'column',height:'100vh',background:'#0d1117',color:'#e6edf3'}}>
-      <style>{'@keyframes bar{0%,100%{transform:scaleY(0.2);opacity:0.3}50%{transform:scaleY(1);opacity:1}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadein{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}.msg-in{animation:fadein 0.15s ease-out}.sidebar-item:hover{background:#1f2937 !important}'}</style>
-
       <Sidebar chats={chats} activeChatId={activeChatId}
         onSelect={setActiveChatId} onCreate={handleCreateChat}
         onDelete={handleDeleteChat} onRename={handleRenameChat}
-        open={sidebarOpen} onClose={()=>setSidebarOpen(false)}/>
+        onLogout={handleLogout} open={sidebarOpen}
+        onClose={()=>setSidebarOpen(false)}
+        userEmail={user.email}/>
 
       {/* Header */}
       <div style={{background:'#161b22',borderBottom:'1px solid #30363d',
         padding:'9px 14px',display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
-        <button onClick={()=>setSidebarOpen(true)} style={{background:'none',border:'none',
-          color:'#8b949e',fontSize:18,cursor:'pointer',padding:'2px 4px',lineHeight:1}}>☰</button>
-        <div style={{width:28,height:28,background:'linear-gradient(135deg,#c89b3c,#785a28)',
-          borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,flexShrink:0}}>⚖</div>
+        <button onClick={()=>setSidebarOpen(true)} style={{
+          background:'none',border:'none',color:'#8b949e',
+          fontSize:18,cursor:'pointer',padding:'2px 4px',lineHeight:1}}>☰</button>
+        <div style={{width:28,height:28,
+          background:'linear-gradient(135deg,#c89b3c,#785a28)',
+          borderRadius:7,display:'flex',alignItems:'center',
+          justifyContent:'center',fontSize:14,flexShrink:0}}>⚖</div>
         <div style={{flex:1,minWidth:0}}>
-          <div style={{fontSize:13,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
-            {activeChatId ? (chats.find(c=>c.id===activeChatId)?.title || 'Riftbound Schiedsrichter') : 'Riftbound Schiedsrichter'}
+          <div style={{fontSize:13,fontWeight:600,whiteSpace:'nowrap',
+            overflow:'hidden',textOverflow:'ellipsis'}}>
+            {activeTitle}
           </div>
           <div style={{fontSize:10,color:'#8b949e'}}>Haiku 4.5 · Errata · Live-Kartensuche</div>
         </div>
-        <button onClick={()=>{localStorage.removeItem('rb_key');setApiKey('');}}
-          title="API-Key ändern" style={{background:'none',border:'1px solid #30363d',
-          borderRadius:5,color:'#8b949e',fontSize:11,padding:'2px 7px',cursor:'pointer'}}>🔑</button>
       </div>
 
-      {dbError && (
-        <div style={{background:'#1c0f0f',borderBottom:'1px solid #6e1a1a',padding:'8px 14px',fontSize:12,color:'#f85149'}}>
-          ⚠ Supabase-Fehler: {dbError} — <button onClick={()=>setDbError(null)} style={{background:'none',border:'none',color:'#f85149',cursor:'pointer',textDecoration:'underline'}}>Ausblenden</button>
-        </div>
-      )}
-
-      {/* Chat area */}
-      <div ref={chatRef} style={{flex:1,overflowY:'auto',padding:'14px',display:'flex',flexDirection:'column',gap:11}}>
+      {/* Chat */}
+      <div ref={chatRef} style={{flex:1,overflowY:'auto',padding:'14px',
+        display:'flex',flexDirection:'column',gap:11}}>
         {!activeChatId && (
-          <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
-            height:'100%',gap:12,color:'#484f58',textAlign:'center',padding:20}}>
+          <div style={{display:'flex',flexDirection:'column',alignItems:'center',
+            justifyContent:'center',height:'100%',gap:12,
+            color:'#484f58',textAlign:'center',padding:20}}>
             <div style={{fontSize:40}}>⚖</div>
             <div style={{fontSize:14,fontWeight:600,color:'#8b949e'}}>Riftbound Schiedsrichter</div>
-            <div style={{fontSize:12,lineHeight:1.6}}>
+            <div style={{fontSize:12,lineHeight:1.7,color:'#484f58'}}>
               Chat über ☰ erstellen oder auswählen.<br/>
-              Errata + Kartensuche. Haiku 4.5 (~0.1 Rp/Frage).
+              Haiku 4.5 · ~0.05 Rp/Frage · Errata eingebaut
             </div>
             <button onClick={()=>setSidebarOpen(true)} style={{
-              background:'#c89b3c',border:'none',borderRadius:8,color:'#0d1117',
-              fontWeight:600,fontSize:13,padding:'9px 18px',cursor:'pointer',marginTop:4}}>
+              background:'#c89b3c',border:'none',borderRadius:8,
+              color:'#0d1117',fontWeight:600,fontSize:13,
+              padding:'9px 18px',cursor:'pointer',marginTop:4}}>
               + Neuen Chat starten
             </button>
           </div>
         )}
         {messages.map((m,i) => <Msg key={i} role={m.role} content={m.content}/>)}
-        {loading && <Msg role="judge" content="" thinking sq={sq}/>}
+        {loading && <Msg role="judge" content="" thinking={true} sq={sq}/>}
       </div>
 
       {/* Quick buttons */}
       {activeChatId && (
         <div style={{padding:'0 12px 7px',display:'flex',gap:5,flexWrap:'wrap',flexShrink:0}}>
-          {quickBtns.map(([l,q])=>(
-            <button key={l} onClick={()=>send(q)} disabled={loading} style={{
+          {qbs.map(([l,q]) => (
+            <button key={l} className="qb" onClick={()=>send(q)} disabled={loading} style={{
               background:'#21262d',border:'1px solid #30363d',borderRadius:20,
-              color:'#8b949e',fontSize:11,padding:'3px 9px',cursor:loading?'default':'pointer'}}>
+              color:'#8b949e',fontSize:11,padding:'3px 9px',
+              cursor:loading?'default':'pointer',transition:'all .15s'}}>
               {l}
             </button>
           ))}
@@ -483,17 +603,25 @@ function App() {
         <div style={{borderTop:'1px solid #30363d',background:'#161b22',
           padding:'9px 12px',display:'flex',gap:7,alignItems:'flex-end',flexShrink:0}}>
           <textarea ref={taRef} value={input}
-            onChange={e=>{setInput(e.target.value);e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,100)+'px';}}
+            onChange={e=>{
+              setInput(e.target.value);
+              e.target.style.height='auto';
+              e.target.style.height=Math.min(e.target.scrollHeight,100)+'px';
+            }}
             onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}}
             placeholder="Regelfrage..." rows={1} disabled={loading}
             style={{flex:1,background:'#0d1117',border:'1px solid',
-              borderColor:input?'#c89b3c':'#30363d',borderRadius:7,color:'#e6edf3',
-              padding:'7px 10px',fontSize:13,fontFamily:'inherit',resize:'none',
-              minHeight:36,maxHeight:100,outline:'none',transition:'border-color .2s'}}/>
+              borderColor:input?'#c89b3c':'#30363d',borderRadius:7,
+              color:'#e6edf3',padding:'7px 10px',fontSize:13,
+              fontFamily:'inherit',resize:'none',
+              minHeight:36,maxHeight:100,outline:'none',
+              transition:'border-color .2s'}}/>
           <button onClick={()=>send()} disabled={loading||!input.trim()} style={{
-            background:loading||!input.trim()?'#3d2f12':'#c89b3c',border:'none',borderRadius:7,
-            color:loading||!input.trim()?'#5d4a25':'#0d1117',fontWeight:600,fontSize:13,
-            padding:'7px 13px',cursor:loading||!input.trim()?'default':'pointer',
+            background:loading||!input.trim()?'#3d2f12':'#c89b3c',
+            border:'none',borderRadius:7,
+            color:loading||!input.trim()?'#5d4a25':'#0d1117',
+            fontWeight:600,fontSize:13,padding:'7px 13px',
+            cursor:loading||!input.trim()?'default':'pointer',
             height:36,whiteSpace:'nowrap',transition:'all .2s',flexShrink:0}}>
             {loading?'…':'Senden ↗'}
           </button>
