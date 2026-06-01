@@ -47,51 +47,25 @@ const sb = supabase.createClient("https://ablijbnlplkvxxuqsvyx.supabase.co", "sb
 
 const ERRATA = "=== ORIGINS CARD ERRATA (2025-10-28) ===\n\nAva Achiever: When I attack, you may pay [C] to play a card with [Hidden] from your hand, ignoring its cost. If it's a unit, play it here.\nBaited Hook: Kill a friendly unit. Look at top 5. You may BANISH a unit from among them (Might up to 1 more than killed unit) and play it, ignoring its cost.\nBlind Fury: Each opponent reveals top card. Choose one and BANISH IT, then play it, ignoring its cost.\nClockwork Keeper: You may pay [C] as additional cost to play me. When you play me, if you paid the additional cost, draw 1.\nConvergent Mutation: [Reaction] Choose a friendly unit. THIS TURN, increase its Might to the Might of another friendly unit.\nDark Child, Starter: At the end of your turn, ready UP TO 2 runes.\nDazzling Aurora: Reveal cards until you reveal a unit and BANISH IT. Play it ignoring its cost, recycle rest.\nDisintegrate: Deal 3 to a unit. If this kills it, DO THIS: draw 1.\nDragon's Rage: Move an enemy unit. THEN DO THIS: Choose another enemy unit at its destination. They deal damage equal to their Mights to each other.\nDune Drake: When I attack, give me +2[M] THIS TURN if there is a ready enemy unit here.\nFalling Star: Deal 3 to a unit. / Deal 3 to a unit. (TWO SEPARATE instructions - can choose different targets)\nHighlander: [Reaction] The next time a friendly unit WOULD DIE this turn, HEAL IT, exhaust it, and recall it instead.\nIcathian Rain: Deal 2 to a unit. (x6 - SIX SEPARATE instructions, can choose different targets each time)\nKarma, Channeler: When you recycle one or more cards TO YOUR MAIN DECK, buff a friendly unit.\nKinkou Monk: When you play me, buff UP TO two other friendly units.\nNocturne, Horrifying: [Ganking] As you LOOK AT OR REVEAL me from the top of your deck, you may banish me. If you do, play me for [A].\nPack of Wonders: Return another friendly gear, unit, or FACEDOWN CARD to its owner's hand.\nPortal Rescue: Banish a friendly unit, then ITS OWNER plays it to THEIR base, ignoring its cost.\nPromising Future: Each player looks at top 5, BANISHES one, then recycles the rest.\nRavenborn Tome: The next spell you play THIS TURN deals 1 Bonus Damage.\nReinforce: Look at top 5. BANISH a unit, then play it reducing its cost by [5].\nSalvage: You may kill UP TO one gear. Draw 1.\nSigil of the Storm: When you conquer here, recycle one of your runes. (THIS DOESN'T CHOOSE ANYTHING.)\nSona, Harmonious: At end of your turn, IF I'M AT A BATTLEFIELD, ready up to 4 friendly runes.\nTargon's Peak: When you conquer here, ready UP TO 2 runes at end of this turn.\nTeemo, Strategist: [Hidden] When I DEFEND, choose an enemy unit HERE, reveal top 5, deal 1 to THAT UNIT for each [Hidden] revealed, recycle.\nThe Boss: If a buffed unit WOULD DIE, you may pay [C], exhaust me, spend its buff to HEAL IT, exhaust it, recall it. When you conquer, ready me.\nThe Dreaming Tree: When A PLAYER chooses a friendly unit here with a spell for the first time each turn, THEY draw 1.\nThe Syren: Move a friendly unit at a battlefield TO ITS base.\nTideturner: [Hidden] When you play me, choose a unit YOU CONTROL at another location. Swap positions.\nUnforgiven: Move a friendly unit to or from ITS base.\nUnlicensed Armory: The next time it WOULD DIE this turn, you may pay [C] to HEAL IT, exhaust it, recall it.\nVoid Gate: Spells and abilities deal 1 Bonus Damage TO UNITS HERE (each instance increased by 1).\nZhonya's Hourglass: [Hidden] If a friendly unit WOULD DIE, kill this instead. HEAL that unit, exhaust it, recall it.\n\n=== SPIRITFORGED CARD ERRATA (2026-01-14) ===\n\nArise!: Play Sand Soldier tokens for each Equipment. THEN DO THIS: Ready UP TO two of them.\nBlood Rush: Give a unit [Assault 2] THIS TURN.\nDeathgrip: Kill a friendly unit. IF YOU DO, give +[M] equal to its Might to another friendly unit this turn. Draw 1.\nEdge of Night: When played from face down, attach to a unit you control (here).\nJanna, Savior: Heal your units here, then move UP TO ONE enemy unit from here to its base.\nJax, Unmatched: Your Equipment EVERYWHERE have [Quick-Draw].\nKato the Arm: When I move to a battlefield, give ANOTHER friendly unit my keywords and +[M] this turn.\nRek'Sai, Swarm Queen: When I attack, reveal top 2. BANISH ONE, play it. If unit, may play here. Recycle rest.\nRell, Magnetic: Play Equipment (cost up to [2]), ignoring cost. IF YOU DO, THEN DO THIS: Attach it to me.\nTianna Crownguard: While I'm at a battlefield, opponents CAN'T GAIN POINTS.\nVoid Burrower: When you conquer, exhaust me to reveal top 2. BANISH ONE, play it. Recycle rest.\nVoid Rush: Reveal top 2. BANISH ONE, play it reducing cost by [2]. DRAW any you didn't banish.\nYone, Blademaster: When I conquer a battlefield THAT WAS UNCONTROLLED, deal damage to an enemy unit in a base.\n\n=== UNLEASHED ERRATA (2026-04-03) ===\n\nGuards!: Play a Sand Soldier token. THEN DO THIS: You may pay [C] to ready it.\nRelentless Pursuit: Move a friendly unit. You may attach UP TO ONE Equipment with the same controller to it.\nDeath from Below: Kill a unit. Then, if it had 3[M] or less, DO THIS: You may play this from your trash for [A].\nBone Skewer: Opponent reveals hand, you choose a unit, they play it. IF THEY DO, THEN DO THIS: [Stun] it.\nLeBlanc, Deceiver: Play a Reflection token there. THEN DO THIS: It becomes a copy of another unit there. Give it [Temporary].\nMirror Image: Play a Reflection token to base. THEN DO THIS: It becomes a copy of that unit. Give it [Temporary].\nKeeper of Masks: [Hidden][Temporary] Play two Reflection tokens here. THEN DO THIS: They become copies of me.\nRengar, Trophy Hunter: [Ambush] I can [Ambush] to a battlefield where there are enemy units, EVEN IF YOU DON'T HAVE UNITS THERE.";
 
-const SYSTEM = `You are an official Riftbound TCG rules judge.
+const SYSTEM = `You are an official Riftbound TCG rules judge. You know all Riftbound Core Rules (2026-03-30).
 
 BEHAVIOUR:
-- Express confidence: start answers with "Sicher:" / "Wahrscheinlich:" / "Unsicher:" depending on how certain you are.
-- Cite rule numbers (e.g. Rule 383.3.a) and sources (e.g. "Unleashed FAQ 2026-04-29") when helpful.
-- If you find conflicting information, state it explicitly.
-- If unsure, say so and explain why rather than guessing.
-- Answer in the language of the question. No intro or filler. Direct and concise.
-- Use web_search to look up specific card texts (piltoverarchive.com) or edge case rulings (riftbound.leagueoflegends.com).
+- Start with "Sicher:" / "Wahrscheinlich:" / "Unsicher:" based on confidence.
+- Cite rule numbers when helpful (e.g. Rule 383.3.a). State conflicts explicitly.
+- Answer in question language. No intro or filler.
+- Use web_search ONLY for: specific card texts not in errata (search piltoverarchive.com "[card name] riftbound") or specific edge-case FAQ (riftbound.leagueoflegends.com/news/rules-and-releases/). Do NOT search for general rules you already know.
 
-CORE RULES (updated 2026-03-30, with Unleashed FAQ corrections 2026-04-29):
+CRITICAL RULES (apply carefully - these have caused confusion):
+- Triggered abilities (Unleashed update): Structure is [trigger]→[condition?]→[you may?]→[cost within instruction?]→effect. "You may" at correct sequence position = optional chain placement. Cost at correct position = base cost paid on finalization. If either appears LATER in text = decided/paid on resolution instead.
+- Rule 323.6 (corrected Unleashed FAQ): Players lose control only if turn is open AND no Showdown/Combat ongoing AND no units there.
+- Rule 316.5.b (corrected): Showdown staged in cleanup AFTER Contested applied — not only when uncontrolled.
+- Private info (new Unleashed FAQ): Player can ignore forced actions on secret/private cards when effect specifies type/quality.
+- Replacement effects: controller of effect chooses ORDER when multiple apply. Can be REFUSED.
+- Linked instructions: later can't execute if earlier didn't. Exception: if earlier REPLACED (not ignored).
+- Attachment: Rules Text INACTIVE while attached but still EXISTS and can be referenced.
+- Victory: points >= Victory Score AND greater than ALL opponents (both conditions). 1v1=8, 2v2=11, FFA=8.
 
-GOLDEN RULES: Card text > rules text. Can't beats Can. DAMAYC. Null ≠ Zero. Units=I/me, Gear/Spells=this, Battlefields=here.
-
-PLAYING A CARD (Rules 370-389): Announce → choose targets+destinations → pay costs → enter chain → legality check step 5 → execute. Conditional permissive abilities checked at step 5, if not met → undo+return.
-
-TRIGGERED ABILITIES (Rules 383, Unleashed): Structure = [trigger] → [extra condition?] → [you may?] → [cost within instruction?] → effect. "You may" at correct position = optional chain placement. Cost within instruction at correct position = base cost paid on finalization. If either appears later in text = paid/decided on resolution instead. Example: "When I die, recycle me to ready runes" → "recycle me to" = base cost. Example: "When I attack, you may pay [C]. If you do, X" → pay [C] = resolution cost (wrong position for base cost).
-
-HOT FEPR (Rules 390-410): Handle Outstanding Tasks → Finalize → Execute → Pass → Resolve. Finalization no longer managed by cleanup (Unleashed).
-
-BATTLEFIELD CONTROL (Rules 187, 323, corrected Unleashed FAQ): Rule 323.6: Players lose control of battlefields without their units if turn is open AND no Showdown/Combat ongoing there. Rule 316.5.b: Showdown staged in cleanup AFTER Contested status applied (not when uncontrolled). Rule 344.2: Showdown opens if Contested AND no units from different players there. Control cannot change while item on chain.
-
-COMBAT (Rules 440-470): 1)Opening(designations, attack/defend triggers fire ONCE first time) 2)Initial Chain(attacker→everyone→defender) 3)Active Chain 4)Damage(Tank first, Backline last, lethal damage must be fully assigned before next unit) 5)Resolution HOT FEPR(cleanup,winner,conquer,remove designations). Winner = player with units remaining.
-
-PRIVATE INFORMATION (new, Unleashed FAQ): A player cannot be compelled to perform an action on secret/private cards if the effect specifies a type or quality. They may ignore it instead.
-
-PRIVATE INFORMATION (new, Unleashed FAQ): A player cannot be compelled to perform an action on secret/private cards if the effect specifies a type or quality. They may ignore it instead.
-
-LETHAL DAMAGE (Rules 323.5, 460.2.c.3): Default = non-zero damage >= Might. Some effects alter this (e.g. Elder Dragon: any non-zero damage from you = lethal). Lethal damage fully assigned before moving to next unit.
-
-ATTACHMENT (Rules 716-725): While attached: Rules Text INACTIVE, Effect Text + Might Bonus ACTIVE. Inactive text still EXISTS and can be referenced.
-
-REPLACEMENT EFFECTS (Rules 370-375): Controller chooses ORDER when multiple apply. Each applied in ONE sequence. Can be REFUSED. Inherits modifications of replaced event.
-
-LINKED INSTRUCTIONS (Unleashed): Later instruction cannot execute if earlier one didn't. Exception: if earlier was REPLACED (not blocked), later still executes.
-
-REFERENTS: "here/my/its/there" checked at resolution. Trigger condition referents checked at trigger time.
-
-KEYWORDS: Hidden[811]=[A] hide,[0] play, gains Reaction when facedown, "facedown card"=correct term. Tank[815]=assigned first. Backline[826]=assigned last, redundant instances ignored. Ambush=Reaction to battlefield where you have units, checked step 5, Rengar errata=can Ambush to enemy-only battlefield. Legion[812]=active while player played another card this turn. Level[824]=active at N+ XP. Hunt=gain XP when conquer/hold. Recall=own base, not a move. Unique=one in play. Equip=attach to unit you control while not already attached. Weaponmaster=choose your Equipment, Equip-[A], attach to me. Assault X=+X[M] as attacker. Quick-Draw=play Equipment at Reaction speed. Repeat=optional cost, execute once more.
-
-COPY: Copies printed/copied traits only. Nothing appended/granted. Copy of copy = copy of original.
-
-VICTORY: points >= Victory Score AND greater than ALL opponents. 1v1=8, 2v2=11, FFA=8. Tianna errata: opponents can't GAIN points.
-
-ERRATA (always use these, never printed text):
+CURRENT ERRATA (always use these, never printed text):
 ` + ERRATA;
 
 // ── SUPABASE HELPERS ──────────────────────────────────────────────────────────
@@ -615,8 +589,8 @@ function App() {
           'anthropic-dangerous-direct-browser-access': 'true'
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 2500,
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 800,
           system: SYSTEM,
           tools: tools,
           messages: m
@@ -720,7 +694,7 @@ function App() {
             {activeTitle}
           </div>
           <div style={{fontSize:11,color:'#8b949e'}}>
-            Sonnet 4.6 &#183; Errata &#183; Live-Kartensuche
+            Haiku 4.5 &#183; Errata &#183; Live-Kartensuche
           </div>
         </div>
       </div>
