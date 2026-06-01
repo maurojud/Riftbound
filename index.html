@@ -49,33 +49,49 @@ const ERRATA = "=== ORIGINS CARD ERRATA (2025-10-28) ===\n\nAva Achiever: When I
 
 const SYSTEM = `You are an official Riftbound TCG rules judge.
 
-STYLE: Answer directly. No intro, no filler. Cite rules when helpful. Answer in the language of the question.
+BEHAVIOUR:
+- Express confidence: start answers with "Sicher:" / "Wahrscheinlich:" / "Unsicher:" depending on how certain you are.
+- Cite rule numbers (e.g. Rule 383.3.a) and sources (e.g. "Unleashed FAQ 2026-04-29") when helpful.
+- If you find conflicting information, state it explicitly.
+- If unsure, say so and explain why rather than guessing.
+- Answer in the language of the question. No intro or filler. Direct and concise.
+- Use web_search to look up specific card texts (piltoverarchive.com) or edge case rulings (riftbound.leagueoflegends.com).
 
-CORE RULES:
-- Golden Rule: card text beats rules text. Can't beats Can. DAMAYC.
-- Playing a card: Announce -> choose targets+move destinations -> pay costs -> enter chain -> legality check (step 5) -> execute.
-- Conditional permissive abilities: checked at step 5. If not met, undo and return card.
-- HOT FEPR: Handle Outstanding Tasks, then Finalize-Execute-Pass-Resolve.
-- "May" triggered abilities (Unleashed): OPTIONAL to place on chain.
-- Costs in triggered instructions ("do X to do Y"): paid on finalization.
-- Linked instructions: later instruction cannot execute if earlier one didn't. Exception: if earlier was REPLACED (not ignored).
-- Replacement effects: controller of replacement effect chooses ORDER. Can be REFUSED.
-- Battlefield control cannot change while: contested, combat/showdown ongoing, or item on chain.
-- Contested = player has units there and doesn't control it.
-- Combat: 1) Opening (designations, attack/defend triggers fire once) 2) Initial Chain (attacker->everyone->defender) 3) Active Chain 4) Damage (Tank first, Backline last) 5) Resolution HOT FEPR (cleanup, winner, conquer, remove designations).
-- Attachment: while attached, Rules Text INACTIVE, Effect Text + Might Bonus ACTIVE. Inactive text still exists and can be referenced.
-- Hidden: [A] to hide, [0] to play from face down, gains Reaction while face down. "Facedown card" is correct term.
-- Ambush: Reaction to play to battlefield where you control units. Rengar errata: can Ambush where enemy units are even without your own.
-- Legion: active only while player has played another card this turn.
-- Level: active while controller has N or more XP.
-- XP: gained via Hunt (when unit conquers/holds). Spent like energy.
-- Recall: sends to object's OWN base. Not a move.
-- Null != Zero: unavailable numerical info is null, not 0.
-- Copy: copies all printed/copied traits. Nothing appended/granted is copied. Copy of copy = copy of original.
-- Victory: points >= Victory Score AND greater than all opponents. 1v1=8, 2v2=11, FFA=8.
-- For card texts not in errata: use web_search on piltoverarchive.com.
+CORE RULES (updated 2026-03-30, with Unleashed FAQ corrections 2026-04-29):
 
-CURRENT ERRATA (always use these, never printed text):
+GOLDEN RULES: Card text > rules text. Can't beats Can. DAMAYC. Null ≠ Zero. Units=I/me, Gear/Spells=this, Battlefields=here.
+
+PLAYING A CARD (Rules 370-389): Announce → choose targets+destinations → pay costs → enter chain → legality check step 5 → execute. Conditional permissive abilities checked at step 5, if not met → undo+return.
+
+TRIGGERED ABILITIES (Rules 383, Unleashed): Structure = [trigger] → [extra condition?] → [you may?] → [cost within instruction?] → effect. "You may" at correct position = optional chain placement. Cost within instruction at correct position = base cost paid on finalization. If either appears later in text = paid/decided on resolution instead. Example: "When I die, recycle me to ready runes" → "recycle me to" = base cost. Example: "When I attack, you may pay [C]. If you do, X" → pay [C] = resolution cost (wrong position for base cost).
+
+HOT FEPR (Rules 390-410): Handle Outstanding Tasks → Finalize → Execute → Pass → Resolve. Finalization no longer managed by cleanup (Unleashed).
+
+BATTLEFIELD CONTROL (Rules 187, 323, corrected Unleashed FAQ): Rule 323.6: Players lose control of battlefields without their units if turn is open AND no Showdown/Combat ongoing there. Rule 316.5.b: Showdown staged in cleanup AFTER Contested status applied (not when uncontrolled). Rule 344.2: Showdown opens if Contested AND no units from different players there. Control cannot change while item on chain.
+
+COMBAT (Rules 440-470): 1)Opening(designations, attack/defend triggers fire ONCE first time) 2)Initial Chain(attacker→everyone→defender) 3)Active Chain 4)Damage(Tank first, Backline last, lethal damage must be fully assigned before next unit) 5)Resolution HOT FEPR(cleanup,winner,conquer,remove designations). Winner = player with units remaining.
+
+PRIVATE INFORMATION (new, Unleashed FAQ): A player cannot be compelled to perform an action on secret/private cards if the effect specifies a type or quality. They may ignore it instead.
+
+PRIVATE INFORMATION (new, Unleashed FAQ): A player cannot be compelled to perform an action on secret/private cards if the effect specifies a type or quality. They may ignore it instead.
+
+LETHAL DAMAGE (Rules 323.5, 460.2.c.3): Default = non-zero damage >= Might. Some effects alter this (e.g. Elder Dragon: any non-zero damage from you = lethal). Lethal damage fully assigned before moving to next unit.
+
+ATTACHMENT (Rules 716-725): While attached: Rules Text INACTIVE, Effect Text + Might Bonus ACTIVE. Inactive text still EXISTS and can be referenced.
+
+REPLACEMENT EFFECTS (Rules 370-375): Controller chooses ORDER when multiple apply. Each applied in ONE sequence. Can be REFUSED. Inherits modifications of replaced event.
+
+LINKED INSTRUCTIONS (Unleashed): Later instruction cannot execute if earlier one didn't. Exception: if earlier was REPLACED (not blocked), later still executes.
+
+REFERENTS: "here/my/its/there" checked at resolution. Trigger condition referents checked at trigger time.
+
+KEYWORDS: Hidden[811]=[A] hide,[0] play, gains Reaction when facedown, "facedown card"=correct term. Tank[815]=assigned first. Backline[826]=assigned last, redundant instances ignored. Ambush=Reaction to battlefield where you have units, checked step 5, Rengar errata=can Ambush to enemy-only battlefield. Legion[812]=active while player played another card this turn. Level[824]=active at N+ XP. Hunt=gain XP when conquer/hold. Recall=own base, not a move. Unique=one in play. Equip=attach to unit you control while not already attached. Weaponmaster=choose your Equipment, Equip-[A], attach to me. Assault X=+X[M] as attacker. Quick-Draw=play Equipment at Reaction speed. Repeat=optional cost, execute once more.
+
+COPY: Copies printed/copied traits only. Nothing appended/granted. Copy of copy = copy of original.
+
+VICTORY: points >= Victory Score AND greater than ALL opponents. 1v1=8, 2v2=11, FFA=8. Tianna errata: opponents can't GAIN points.
+
+ERRATA (always use these, never printed text):
 ` + ERRATA;
 
 // ── SUPABASE HELPERS ──────────────────────────────────────────────────────────
@@ -147,32 +163,69 @@ async function dbSaveProfile(userId, apiKey) {
 }
 
 // ── THINKING ANIMATION ────────────────────────────────────────────────────────
-function Thinking({ query }) {
+function Thinking({ query, step }) {
   const [tick, setTick] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setTick(n => n + 1), 500);
+    const t = setInterval(() => setTick(n => n + 1), 600);
     return () => clearInterval(t);
   }, []);
-  const labels = ['Denke nach…', 'Prüfe Regeln…', 'Prüfe Errata…'];
-  const label = query ? 'Suche: „' + query + '“' : labels[tick % 3];
-  const n = query ? 7 : 4;
-  const color = query ? '#79c0ff' : '#c89b3c';
+
+  // Varied thinking labels that rotate naturally
+  const thinkLabels = [
+    'Lese Regelwerk…',
+    'Prüfe Errata…',
+    'Analysiere Interaktion…',
+    'Prüfe Keyword-Regeln…',
+    'Schaue Regelabschnitt nach…',
+    'Kombiniere Regeln…',
+    'Prüfe Ausnahmen…',
+    'Überprüfe Reihenfolge…',
+  ];
+
+  const searchLabels = [
+    'Suche offizielle Quellen…',
+    'Lese Kartendaten…',
+    'Prüfe FAQ…',
+    'Suche Errata-Updates…',
+  ];
+
+  let label;
+  if (query) {
+    label = '„' + query + '“';
+  } else if (step) {
+    label = step;
+  } else {
+    label = thinkLabels[tick % thinkLabels.length];
+  }
+
+  const isSearching = !!query;
+  const n = isSearching ? 8 : 5;
+  const color = isSearching ? '#79c0ff' : '#c89b3c';
+
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:7}}>
-      <div style={{display:'flex',alignItems:'center',gap:3,height:20}}>
+    <div style={{display:'flex',flexDirection:'column',gap:8}}>
+      <div style={{display:'flex',alignItems:'flex-end',gap:3,height:22}}>
         {Array.from({length:n}).map((_,i) => (
-          <div key={i} style={{width:3,borderRadius:3,background:color,height:20,
-            animation:'bar 0.85s ease-in-out infinite',
-            animationDelay:i*0.1+'s',transformOrigin:'center'}}/>
+          <div key={i} style={{
+            width:4,borderRadius:4,background:color,
+            height:22,
+            animation:'bar 0.9s ease-in-out infinite',
+            animationDelay:i*0.08+'s',
+            transformOrigin:'bottom'
+          }}/>
         ))}
       </div>
-      <div style={{display:'flex',alignItems:'center',gap:6,fontSize:11,
-        color:query?'#79c0ff':'#8b949e'}}>
-        {query && <span style={{width:10,height:10,border:'1.5px solid #30363d',
-          borderTopColor:'#79c0ff',borderRadius:'50%',
-          animation:'spin .7s linear infinite',
-          display:'inline-block',flexShrink:0}}/>}
-        {label}
+      <div style={{display:'flex',alignItems:'center',gap:6,fontSize:12,
+        color:isSearching?'#79c0ff':'#8b949e',maxWidth:220}}>
+        {isSearching && <span style={{
+          width:11,height:11,
+          border:'1.5px solid #30363d',
+          borderTopColor:'#79c0ff',
+          borderRadius:'50%',
+          animation:'spin .65s linear infinite',
+          display:'inline-block',flexShrink:0
+        }}/>}
+        <span style={{lineHeight:1.3}}>{label}</span>
       </div>
     </div>
   );
@@ -667,7 +720,7 @@ function App() {
             {activeTitle}
           </div>
           <div style={{fontSize:11,color:'#8b949e'}}>
-            Sonnet 3.5 &#183; Errata &#183; Live-Kartensuche
+            Sonnet 4.6 &#183; Errata &#183; Live-Kartensuche
           </div>
         </div>
       </div>
