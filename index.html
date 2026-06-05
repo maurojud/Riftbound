@@ -407,7 +407,8 @@ function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + SB_KEY
+          'Authorization': 'Bearer ' + SB_KEY,
+          'apikey': SB_KEY
         },
         body: JSON.stringify({
           action: 'ask',
@@ -419,7 +420,12 @@ function App() {
         })
       });
 
-      const data = await r.json();
+      let data;
+      try {
+        data = await r.json();
+      } catch(e) {
+        throw new Error('Edge Function nicht erreichbar. Bitte prüfe ob die Edge Function in Supabase deployed ist.');
+      }
       if (data.error) throw new Error(data.error);
 
       const aMsg = { role: 'assistant', content: data.reply, sources: data.chunks_titles };
